@@ -1,0 +1,3 @@
+include FORMAT.md
+include .github/workflows/ci.yml
+recursive-include tests *.py *.cjs
