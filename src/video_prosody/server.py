@@ -274,6 +274,7 @@ def make_handler(project, *, assets=None, document_transform=None):
                 name = {
                     "/": "index.html",
                     "/app.js": "app.js",
+                    "/common.js": "common.js",
                     "/style.css": "style.css",
                     "/prosody": "prosody.html",
                     "/prosody.js": "prosody.js",

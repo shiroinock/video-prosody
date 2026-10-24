@@ -18,6 +18,6 @@ jobs:
         with:
           node-version: '22'
       - run: python -m unittest discover -s tests
-      - run: node --check src/video_prosody/web/app.js
+      - run: for f in src/video_prosody/web/*.js; do node --check "$f"; done
       - run: python -m build
       - run: python -m twine check dist/*

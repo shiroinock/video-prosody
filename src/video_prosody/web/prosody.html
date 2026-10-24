@@ -1,4 +1,147 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>単語・声・間の確認</title><link rel="stylesheet" href="/style.css"><style>.workspace{grid-template-columns:360px minmax(450px,1fr)}.wordList{max-height:150px;overflow:auto;background:#fff;border:1px solid #dce2d9;border-radius:10px;padding:8px;margin-bottom:14px}.spokenWord{padding:2px 3px}.spokenWord.playing{background:#1c6557;color:#fff;border-radius:3px}.word{display:inline-block;margin:4px;padding:7px 10px}.word.selected{background:#1c6557;color:white}.word.playing{outline:3px solid #91c9b7}.inspector{background:white;border:1px solid #dce2d9;padding:20px;border-radius:12px;margin-bottom:15px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fields label{font-size:12px;display:flex;flex-direction:column;gap:6px}.fields input{padding:8px;border:1px solid #cbd5cd;border-radius:6px;font:inherit}svg{width:100%;height:230px;background:#f7f9f6;cursor:crosshair}#wordText{font-size:20px;font-weight:700}#moraInfo{line-height:1.8;font-size:13px;background:#edf5ef;padding:10px;border-radius:8px}.moraUnit{display:inline-block;border:1px solid #a9cdbd;border-radius:4px;padding:2px 7px;margin:3px}#metrics{line-height:1.9;font-size:13px}.inline{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}#audit{max-height:250px;overflow:auto;white-space:pre-wrap;font-size:12px}button.active{background:#1c6557;color:white}@media(max-width:850px){.workspace{grid-template-columns:1fr}.playerPanel{position:static}}</style></head><body>
-<header><b>単語・声・間の確認</b><a href="/">文字起こし確認に戻る</a></header><main><p id="status" role="status">計測結果を読み込み中…</p><div class="workspace"><aside class="playerPanel"><h2 id="title"></h2><video id="audioVideo" controls preload="metadata" playsinline></video><div class="inline"><button id="continuousPlay">通しで再生</button><label><input id="followWord" type="checkbox" checked>再生中の単語を追う</label></div><div class="inline"><button id="wordPlay">選択語を再生</button><label><input id="wordLoop" type="checkbox">繰り返す</label><select id="rate" aria-label="再生速度"><option value="0.75">0.75倍</option><option value="1" selected>1倍</option></select></div><p id="playTime">0.000 秒</p><p class="hint">単語境界は推定です。高さはBGMを含む音声からの推定、音量は録音のdBFSです。語間は隣の単語との時間差で、無音を保証しません。</p><p><a href="/moras">各モーラの開始・終了時刻を確認する</a></p><button id="exportProsody">計測・訂正JSONを書き出す</button><details><summary>単語の訂正履歴 <span id="auditCount"></span></summary><div id="audit"></div></details></aside><section>
-<h2>単語を選ぶ <span id="count"></span></h2><div class="wordList" id="wordList"></div><div class="inspector"><h2 id="wordText">単語を選択</h2><p id="context"></p><div id="moraInfo"></div><svg id="chart" viewBox="0 0 800 230" aria-label="選択語の周辺の声の高さと音量"></svg><p class="hint">緑：声の高さ（Hz）、灰：音量（dBFS）、帯：選択語、縦線：再生位置。グラフをクリックして移動。</p><p id="metrics"></p><fieldset id="boundaryControls"><legend>境界を聴きながら調整</legend><div class="inline"><button id="repeatStart">開始の前後を繰り返す</button><button id="repeatEnd">終了の前後を繰り返す</button><button id="stopBoundary">停止</button><label>境界の前後 <select id="boundaryWindow" aria-label="境界の前後の再生時間"><option value="0.2">0.2秒</option><option value="0.35" selected>0.35秒</option><option value="0.6">0.6秒</option><option value="1">1秒</option></select></label></div><p id="boundaryStatus" role="status">開始または終了の前後を繰り返し再生できます。</p><div class="inline"><span>開始</span><button data-boundary="start" data-delta="-0.05">開始 −0.05秒</button><button data-boundary="start" data-delta="-0.01">開始 −0.01秒</button><button data-boundary="start" data-delta="0.01">開始 ＋0.01秒</button><button data-boundary="start" data-delta="0.05">開始 ＋0.05秒</button></div><div class="inline"><span>終了</span><button data-boundary="end" data-delta="-0.05">終了 −0.05秒</button><button data-boundary="end" data-delta="-0.01">終了 −0.01秒</button><button data-boundary="end" data-delta="0.01">終了 ＋0.01秒</button><button data-boundary="end" data-delta="0.05">終了 ＋0.05秒</button></div><p class="hint">点の前後を聴いて、語の出だし・終わりに合わせます。調整中は選択語を固定します。変更後は訂正理由を入力して保存してください。</p></fieldset><div class="fields"><label>単語<input id="text" aria-label="単語"></label><label>訂正理由<input id="reason" aria-label="計測の訂正理由"></label><label>発音の訂正（ひらがな、空欄で辞書）<input id="pronunciation" aria-label="発音の訂正"></label><label><span>読みの確認</span><span><input id="pronunciationVerified" type="checkbox">発音を確認済み</span></label><label>開始（秒）<input id="start" type="number" step="0.01" min="0"></label><label>終了（秒）<input id="end" type="number" step="0.01" min="0"></label><label>高さの手動訂正（Hz、空欄で自動）<input id="pitch" type="number" step="0.1" min="20" max="2000"></label><label>音量の手動訂正（dBFS、空欄で自動）<input id="volume" type="number" step="0.1" min="-160" max="0"></label></div><div class="inline"><button id="setStart">再生位置を開始に</button><button id="setEnd">再生位置を終了に</button><label><input id="verified" type="checkbox">聴いて確認済み</label><button class="save" id="saveWord">単語の訂正を保存</button></div><p class="hint">読みの訂正からモーラ数を再計算します。各拍の推定時刻はモーラ確認画面で確認できます。引き伸ばしの時間は開始・終了で調整してください。時刻を保存すると長さ・高さ・音量・前後の語間を再計算します。手動訂正値と自動計測値は別々に残ります。</p><p id="saveState" role="status"></p></div>
-</section></div></main><script src="/prosody.js"></script></body></html>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>単語と声の確認</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <section class="unitStrip" aria-labelledby="stripTitle">
+      <div class="stripHead">
+        <h2 id="stripTitle" class="sectionTitle">
+          単語 <span id="count" class="num"></span>
+        </h2>
+        <div class="stripLegend">
+          <span>✓ 確認済み</span><span>下線 読みを要確認</span
+          ><span>赤枠 再生中</span>
+        </div>
+      </div>
+      <div id="wordList"></div>
+    </section>
+    <main class="editorLayout">
+      <section class="editor panel" aria-labelledby="wordText">
+        <div class="editorHead">
+          <div class="titles">
+            <h1 id="wordText">単語を選択</h1>
+            <p id="context" class="context"></p>
+          </div>
+          <div class="navBtns">
+            <button id="prevItem" title="前の単語（←）">前へ</button>
+            <button id="nextItem" title="次の単語（→）">次へ</button>
+            <button id="wordPlay" title="選択中の単語を再生（R）">
+              単語を再生
+            </button>
+          </div>
+        </div>
+        <div id="moraInfo" class="facts"></div>
+        <p id="notice" class="notice" hidden></p>
+        <svg
+          id="chart"
+          class="chart"
+          viewBox="0 0 800 240"
+          aria-label="選択中の単語の前後の声の高さと音量"
+        ></svg>
+        <div class="chartLegend">
+          <span><i style="background: var(--pitch)"></i>声の高さ（Hz）</span>
+          <span><i style="background: var(--volume)"></i>音量（dBFS）</span>
+          <span><i style="background: var(--band-selected)"></i>選択中の単語</span>
+          <span><i style="background: var(--playhead)"></i>再生位置</span>
+          <span>クリックでその位置へ移動</span>
+        </div>
+        <div class="boundaries">
+          <div class="boundary start">
+            <div class="boundaryHead">
+              <span class="sectionTitle">開始</span>
+              <input id="start" type="number" step="0.01" min="0" aria-label="開始（秒）" />
+              <span class="muted small">秒</span>
+            </div>
+            <div class="nudges">
+              <button data-boundary="start" data-delta="-0.05" aria-label="開始を0.05秒早める">−0.05</button>
+              <button data-boundary="start" data-delta="-0.01" aria-label="開始を0.01秒早める">−0.01</button>
+              <button id="repeatStart" class="listen" aria-pressed="false">前後を聴く</button>
+              <button data-boundary="start" data-delta="0.01" aria-label="開始を0.01秒遅らせる">＋0.01</button>
+              <button data-boundary="start" data-delta="0.05" aria-label="開始を0.05秒遅らせる">＋0.05</button>
+            </div>
+            <div><button id="setStart" class="quiet">再生位置を開始にする</button></div>
+          </div>
+          <div class="boundary end">
+            <div class="boundaryHead">
+              <span class="sectionTitle">終了</span>
+              <input id="end" type="number" step="0.01" min="0" aria-label="終了（秒）" />
+              <span class="muted small">秒</span>
+            </div>
+            <div class="nudges">
+              <button data-boundary="end" data-delta="-0.05" aria-label="終了を0.05秒早める">−0.05</button>
+              <button data-boundary="end" data-delta="-0.01" aria-label="終了を0.01秒早める">−0.01</button>
+              <button id="repeatEnd" class="listen" aria-pressed="false">前後を聴く</button>
+              <button data-boundary="end" data-delta="0.01" aria-label="終了を0.01秒遅らせる">＋0.01</button>
+              <button data-boundary="end" data-delta="0.05" aria-label="終了を0.05秒遅らせる">＋0.05</button>
+            </div>
+            <div><button id="setEnd" class="quiet">再生位置を終了にする</button></div>
+          </div>
+        </div>
+        <div class="boundaryFoot">
+          <label
+            >聴く範囲
+            <select id="boundaryWindow" aria-label="境界の前後に再生する時間">
+              <option value="0.2">前後0.2秒</option>
+              <option value="0.35" selected>前後0.35秒</option>
+              <option value="0.6">前後0.6秒</option>
+              <option value="1">前後1秒</option>
+            </select></label
+          >
+          <span id="boundaryStatus" role="status"></span>
+        </div>
+        <dl id="metrics" class="stats"></dl>
+      </section>
+      <aside class="form panel" aria-label="単語の訂正">
+        <div class="media">
+          <video id="audioVideo" controls preload="metadata" playsinline></video>
+        </div>
+        <label class="field">表記<input id="text" /></label>
+        <label class="field"
+          >発音（ひらがな）<input id="pronunciation" placeholder="空欄なら辞書の発音" />
+          <span class="help">モーラ数はこの発音から数えます。</span></label
+        >
+        <label class="check"
+          ><input id="pronunciationVerified" type="checkbox" /> 発音を確認済み</label
+        >
+        <details id="overrides">
+          <summary>高さ・音量を手動で上書き</summary>
+          <div>
+            <label class="field"
+              >高さ（Hz）<input id="pitch" type="number" step="0.1" min="20" max="2000" placeholder="空欄なら自動"
+            /></label>
+            <label class="field"
+              >音量（dBFS）<input id="volume" type="number" step="0.1" min="-160" max="0" placeholder="空欄なら自動"
+            /></label>
+            <p class="small muted">自動の計測値は別に残ります。</p>
+          </div>
+        </details>
+        <label class="field">訂正理由<input id="reason" placeholder="任意" /></label>
+        <label class="check"
+          ><input id="verified" type="checkbox" /> 境界を聴いて確認済み</label
+        >
+        <div class="formActions">
+          <button id="saveWord" title="Ctrl+S">保存</button>
+          <button id="confirmWord" class="primary" title="Ctrl+Enter">
+            確認済みにして次へ
+          </button>
+        </div>
+        <p id="saveState" class="formStatus" role="status"></p>
+        <div class="formFoot">
+          <p class="small muted">
+            境界と発音は推定です。高さはBGMを含む音声からの推定で、語間は隣の単語との時間差です（無音とは限りません）。時刻を保存すると、長さ・高さ・音量・語間を計算し直します。
+          </p>
+          <details class="history">
+            <summary>単語の訂正履歴（<span id="auditCount">0</span>件）</summary>
+            <div id="audit" class="historyList"></div>
+          </details>
+        </div>
+      </aside>
+    </main>
+    <script src="/common.js"></script>
+    <script src="/prosody.js"></script>
+  </body>
+</html>

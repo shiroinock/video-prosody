@@ -279,6 +279,7 @@ class ProjectTest(unittest.TestCase):
                 "/prosody",
                 "/moras",
                 "/app.js",
+                "/common.js",
                 "/prosody.js",
                 "/moras.js",
                 "/api/video?id=sample",

@@ -1,23 +1,48 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>文字起こし確認</title><link rel="stylesheet" href="/style.css"></head>
-<body>
-<header><div class="brand">文字起こし確認</div><div id="globalStatus" role="status">読み込み中…</div></header>
-<main>
-<section class="heading"><div><p>時刻を選ぶと、その区間から再生できます。</p></div><button id="export">JSONを書き出す</button></section>
-<nav id="videos" aria-label="動画選択"></nav>
-<p><a href="/prosody">選択動画の単語・声の高さ・音量・間を確認する</a> ／ <a href="/moras">モーラの時刻を確認する</a></p>
-<div class="workspace">
-<aside class="playerPanel">
-<h2 id="title"></h2>
-<p id="playbackStatus" class="hint" role="status"></p>
-<video id="player" controls preload="metadata" playsinline></video>
-<div class="transport"><button id="back">−2秒</button><button id="play">再生 / 停止</button><button id="forward">＋2秒</button><select id="speed" aria-label="再生速度"><option value="0.75">0.75倍</option><option value="1" selected>1倍</option><option value="1.25">1.25倍</option></select></div>
-<div class="settings"><label><input type="checkbox" id="loop"> 選択区間を繰り返す</label><label><input type="checkbox" id="follow" checked> 再生位置を追う</label></div>
-<p class="hint">時刻は音声認識の推定です。区間の前後も聴いて確認してください。</p>
-<a id="source" target="_blank" rel="noreferrer">参照元を開く ↗</a>
-<div class="progress"><div id="progressBar"></div></div><p id="progressText"></p>
-<details><summary>この動画の手動訂正履歴 <span id="historyCount">0</span></summary><div id="history"></div></details>
-</aside>
-<section class="transcriptPanel"><div class="listHeader"><h2>発言と訂正</h2><label><input type="checkbox" id="pendingOnly"> 未確認のみ</label></div><div id="segments"></div></section>
-</div>
-</main><script src="/app.js"></script></body></html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>文字起こしの確認</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="transcriptLayout">
+      <aside class="sidePanel">
+        <div class="media">
+          <video id="player" controls preload="metadata" playsinline></video>
+        </div>
+        <p id="playbackStatus" class="small muted" role="status"></p>
+        <p class="small muted">
+          区間の時刻は音声認識の推定です。前後も少し含めて再生します。
+        </p>
+        <a id="source" class="small" target="_blank" rel="noreferrer"
+          >参照元を開く</a
+        >
+        <details class="history">
+          <summary>訂正履歴（<span id="historyCount">0</span>件）</summary>
+          <div id="history" class="historyList"></div>
+        </details>
+      </aside>
+      <section aria-labelledby="listTitle">
+        <div class="listHeader">
+          <h1 id="listTitle" class="sectionTitle">発言の区間</h1>
+          <div class="filters" role="group" aria-label="表示する区間">
+            <button data-filter="all" aria-pressed="true">
+              すべて <span class="num" data-count="all"></span>
+            </button>
+            <button data-filter="pending" aria-pressed="false">
+              未確認 <span class="num" data-count="pending"></span>
+            </button>
+            <button data-filter="review" aria-pressed="false">
+              要確認 <span class="num" data-count="review"></span>
+            </button>
+          </div>
+        </div>
+        <div id="segments"></div>
+      </section>
+    </main>
+    <script src="/common.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

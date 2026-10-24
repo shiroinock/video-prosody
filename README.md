@@ -144,16 +144,30 @@ original-media playback and reproducibility.
 
 ### 5. Review and save corrections
 
-| Page | What to check |
-| --- | --- |
-| Transcript (`/`) | Play each segment, edit recognized text and save; mark **音声を確認済み** only after listening |
-| Words/prosody (`/prosody`) | Inspect word timings, readings, pitch, volume and gaps |
-| Mora boundaries (`/moras`) | Loop a mora or its start/end boundary, adjust times, and save the reason and verification state |
+The review is three steps, shown at the top of every page. The recording picker
+and step links keep the same recording selected.
 
-Follow the links on the transcript page to keep the generated recording ID
-selected. Word and mora review use a separate PCM24 playback WAV at the original
-sample rate and channel count. Mora controls allow 0.01/0.05-second adjustments;
-those controls do not imply that the model's estimates have that precision.
+| Step | What to check |
+| --- | --- |
+| 1 文字起こし (`/`) | Play each segment, edit recognized text and save; mark **聴いて確認済み** only after listening. Filter to unverified or flagged segments |
+| 2 単語と声 (`/prosody`) | Inspect word timings, readings, pitch, volume and gaps; adjust word boundaries |
+| 3 モーラ (`/moras`) | Loop a mora or its start/end boundary, adjust times, and save the reason and verification state |
+
+Playback controls stay at the bottom of each page. **確認済みにして次へ** saves the
+current item as verified and plays the next one. Keyboard shortcuts:
+
+| Key | Action |
+| --- | --- |
+| Space | Play / pause |
+| R | Play the selected segment, word or mora |
+| ← / → | Previous / next item |
+| Ctrl+Enter (⌘+Enter) | Mark verified, save and go to the next item |
+| Ctrl+S (⌘+S) | Save without changing the verification state |
+| ? | Show the shortcut list |
+
+Word and mora review use a separate PCM24 playback WAV at the original sample rate
+and channel count. Boundary controls allow 0.01/0.05-second adjustments; those
+controls do not imply that the model's estimates have that precision.
 
 Saves keep the original estimates and append revisioned correction history. Press
 **Ctrl+C in the terminal** to stop the review server; saved changes remain on disk.
@@ -353,7 +367,7 @@ between estimates, manual corrections and verified annotations.
 ```sh
 python -m pip install -e '.[build]'
 python -m unittest discover -s tests
-node --check src/video_prosody/web/app.js
+for f in src/video_prosody/web/*.js; do node --check "$f"; done
 python -m build
 python -m twine check --strict dist/*
 ```
