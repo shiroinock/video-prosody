@@ -29,6 +29,35 @@ dependencies, download caches, decoded playback audio and analysis results.
 Installation/model preparation require internet access. With the models and
 pronunciation dictionary prepared, analysis and review use local files.
 
+## Nix
+
+The flake packages the CLI with every inference extra on Apple Silicon Macs and
+all stages except MLX transcription on `x86_64-linux` / `aarch64-linux`
+(nixpkgs no longer supports Intel Macs). FFmpeg and the Open JTalk dictionary
+come from Nix, so the dictionary step below is not needed.
+
+```sh
+nix run github:shiroinock/video-prosody -- analyze recording.mp4
+nix build            # ./result/bin/video-prosody
+nix develop          # editable checkout with uv, Node.js and FFmpeg
+nix flake check
+```
+
+Model weights are not part of the package. Prepare them as in step 2 with
+`nix run github:shiroinock/video-prosody -- prepare-model --model-path ...`
+into the default model directory (`~/Library/Caches/video-prosody/models` on
+macOS, `$XDG_CACHE_HOME/video-prosody/models` elsewhere), `work/models` in the
+current directory, or pass `--model-path` / `--alignment-model`. Dependency
+versions are pinned by `uv.lock`; update it with `uv lock` and commit it with
+`flake.lock`.
+
+Dependent flakes can reuse the packaging. `packages.<system>.python-env` is an
+interpreter with the core and that platform's extras (`lib.extrasFor pkgs`).
+For a uv2nix package set that locks `video-prosody` itself, compose
+`lib.pyprojectOverrides pkgs` (source builds and the MLX library path), or extend
+`lib.pythonSet pkgs`. Wrap the resulting commands with the variables in
+`lib.runtimeEnv pkgs` and `lib.runtimeInputs pkgs` on `PATH`.
+
 ## Quick start: local file to review
 
 Run the following steps from the same terminal on an Apple Silicon Mac. Keep the
