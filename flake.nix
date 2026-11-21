@@ -95,6 +95,16 @@
             nativeBuildInputs =
               (old.nativeBuildInputs or [ ]) ++ final.resolveBuildSystem { setuptools = [ ]; };
           });
+          # Dependents lock this project as a git source, for which uv.lock records
+          # no build system.
+          video-prosody = prev.video-prosody.overrideAttrs (old: {
+            nativeBuildInputs =
+              (old.nativeBuildInputs or [ ])
+              ++ final.resolveBuildSystem {
+                setuptools = [ ];
+                wheel = [ ];
+              };
+          });
         };
 
       pythonSet =
