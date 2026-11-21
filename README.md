@@ -51,6 +51,13 @@ current directory, or pass `--model-path` / `--alignment-model`. Dependency
 versions are pinned by `uv.lock`; update it with `uv lock` and commit it with
 `flake.lock`.
 
+Dependent flakes can reuse the packaging. `packages.<system>.python-env` is an
+interpreter with the core and that platform's extras (`lib.extrasFor pkgs`).
+For a uv2nix package set that locks `video-prosody` itself, compose
+`lib.pyprojectOverrides pkgs` (source builds and the MLX library path), or extend
+`lib.pythonSet pkgs`. Wrap the resulting commands with the variables in
+`lib.runtimeEnv pkgs` and `lib.runtimeInputs pkgs` on `PATH`.
+
 ## Quick start: local file to review
 
 Run the following steps from the same terminal on an Apple Silicon Mac. Keep the

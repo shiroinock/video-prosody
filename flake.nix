@@ -65,9 +65,11 @@
           hash = "sha256-+6cHKujNEzmJbpN9Uan6kZKsPdwxRRzT3ZazDnCNi3s=";
         };
 
+      # Each fix applies only when the set contains the package, so a dependent set
+      # without some extras can still compose these.
       packageOverrides =
         pkgs: final: prev:
-        lib.optionalAttrs (prev ? mlx) {
+        lib.filterAttrs (name: _: prev ? ${name}) {
           # libmlx.dylib ships in the separate mlx-metal wheel; the extension modules
           # only look beside themselves, which differs from it in the store.
           mlx = prev.mlx.overrideAttrs (old: {
@@ -76,8 +78,6 @@
                 ${final.mlx-metal}/${final.python.sitePackages}/mlx/lib {} \;
             '';
           });
-        }
-        // {
           pyopenjtalk = prev.pyopenjtalk.overrideAttrs (old: {
             nativeBuildInputs =
               (old.nativeBuildInputs or [ ])
@@ -111,14 +111,31 @@
         IMAGEIO_FFMPEG_EXE = "${pkgs.ffmpeg-headless}/bin/ffmpeg";
         OPEN_JTALK_DICT_DIR = "${openJTalkDict pkgs}";
       };
+      runtimeInputs = pkgs: [ pkgs.ffmpeg-headless ];
     in
     {
+      # For dependent flakes, such as the private YouTube adapter. Compose
+      # pyprojectOverrides into another uv2nix package set that locks video-prosody
+      # with its extras, or extend pythonSet; export runtimeEnv and put runtimeInputs
+      # on PATH in the wrapper.
+      lib = {
+        inherit
+          extrasFor
+          pythonSet
+          runtimeEnv
+          runtimeInputs
+          ;
+        pyprojectOverrides = packageOverrides;
+      };
+
       packages = forAllSystems (
         pkgs:
         let
           env = (pythonSet pkgs).mkVirtualEnv "video-prosody-env" { video-prosody = extrasFor pkgs; };
         in
         {
+          # Interpreter with core and the platform's inference extras; set runtimeEnv.
+          python-env = env;
           default =
             pkgs.runCommand "video-prosody-${(lib.importTOML ./pyproject.toml).project.version}"
               {
@@ -128,7 +145,7 @@
               ''
                 mkdir -p $out/bin
                 makeWrapper ${env}/bin/video-prosody $out/bin/video-prosody \
-                  --prefix PATH : ${lib.makeBinPath [ pkgs.ffmpeg-headless ]} \
+                  --prefix PATH : ${lib.makeBinPath (runtimeInputs pkgs)} \
                   ${lib.concatStringsSep " " (
                     lib.mapAttrsToList (k: v: "--set-default ${k} ${v}") (runtimeEnv pkgs)
                   )}
