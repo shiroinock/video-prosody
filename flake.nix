@@ -91,6 +91,11 @@
             # setup.py runs CMake itself to generate config.h.
             dontUseCmakeConfigure = true;
           });
+          # The Linux wheel's optional TBB threading layer links libtbb.so.12.
+          numba = prev.numba.overrideAttrs (old: {
+            buildInputs =
+              (old.buildInputs or [ ]) ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.onetbb ];
+          });
           unidic-lite = prev.unidic-lite.overrideAttrs (old: {
             nativeBuildInputs =
               (old.nativeBuildInputs or [ ]) ++ final.resolveBuildSystem { setuptools = [ ]; };
